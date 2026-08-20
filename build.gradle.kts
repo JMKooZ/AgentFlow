@@ -18,15 +18,16 @@ repositories {
 }
 
 dependencies {
-    // Spring
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-validation")
-
-    // JPA
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
     // MySQL
     runtimeOnly("com.mysql:mysql-connector-j")
+
+    // Flyway
+    implementation("org.flywaydb:flyway-core")
+    runtimeOnly("org.flywaydb:flyway-mysql")
 
     // Lombok
     compileOnly("org.projectlombok:lombok")
@@ -34,7 +35,6 @@ dependencies {
 
     // Test
     testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 tasks.withType<Test> {
