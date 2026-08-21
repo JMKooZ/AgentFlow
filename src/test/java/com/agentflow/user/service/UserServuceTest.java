@@ -5,6 +5,7 @@ import com.agentflow.user.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -18,6 +19,9 @@ class UserServiceTest {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Test
     void 사용자_생성() {
@@ -63,5 +67,26 @@ class UserServiceTest {
                 )
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("이미 사용 중인 이메일입니다.");
+    }
+
+    @Test
+    void 비밀번호는_암호화되어_저장된다() {
+        // given
+        String password = "password123";
+
+        //when
+        Long userId = userService.createUser(
+                "passwordTest@agentflow.com",
+                password,
+                "암호화 테스트"
+        ).getId();
+
+        // then
+        User user = userRepository.findById(userId)
+                .orElseThrow();
+
+        assertThat(user.getPassword()).isNotEqualTo(password);
+
+        assertThat(passwordEncoder.matches(password, user.getPassword())).isTrue();
     }
 }
