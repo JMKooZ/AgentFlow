@@ -4,6 +4,7 @@ import com.agentflow.user.entity.User;
 import com.agentflow.user.entity.UserRole;
 import com.agentflow.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
     public User createUser(
@@ -24,9 +26,11 @@ public class UserService {
             throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
         }
 
+        String encodedPassword = passwordEncoder.encode(password);
+
         User user = User.create(
                 email,
-                password,
+                encodedPassword,
                 name,
                 UserRole.USER
         );
