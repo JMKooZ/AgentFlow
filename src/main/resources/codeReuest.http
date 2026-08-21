@@ -13,3 +13,19 @@ Content-Type: application/json
   "password": "password123",
   "name": "AgentFlow"
 }
+
+### post login test
+POST http://localhost:8080/auth/login
+Content-Type: application/json
+
+### ok
+#{
+#  "userId": 1,
+#  "email": "bcrypt@agentflow.com",
+#  "name": "BCrypt Test"
+#}
+### fail
+#{
+#  "email": "bcrypt@agentflow.com",
+#  "password": "wrongPassword"
+#}
