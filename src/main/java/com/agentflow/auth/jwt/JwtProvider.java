@@ -1,5 +1,6 @@
 package com.agentflow.auth.jwt;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Component;
@@ -20,6 +21,9 @@ public class JwtProvider {
         this.accessTokenExpiration = jwtProperties.accessTokenExpiration();
     }
 
+    /**
+     * Access Token 생성
+     */
     public String createAccessToken(Long userId, String email) {
         Date now = new Date();
         Date expiration = new Date(now.getTime() + accessTokenExpiration);
@@ -31,5 +35,44 @@ public class JwtProvider {
                 .expiration(expiration)
                 .signWith(secretKey)
                 .compact();
+    }
+
+    /**
+     * JWT 검증 및 Claims 반환
+     */
+    public Claims parseToken(String token) {
+        return Jwts.parser()
+                .verifyWith(secretKey)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+    }
+
+    /**
+     * JWT 유효성 검증
+     */
+    public boolean validateToken(String token) {
+        try {
+            parseToken(token);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * JWT에서 userId 추출
+     */
+    public Long getUserId(String token) {
+        Claims claims = parseToken(token);
+        return Long.valueOf(claims.getSubject());
+    }
+
+    /**
+     * JWT에서 email 추출
+     */
+    public String getEmail(String token) {
+        Claims claims = parseToken(token);
+        return claims.get("email", String.class);
     }
 }
