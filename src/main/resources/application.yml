@@ -22,8 +22,10 @@ spring:
 
 logging:
   level:
-    org.hibernate.SQL: debug
-    org.springframework.security: debug
+    org.hibernate.SQL: DEBUG
+    org.springframework.security: INFO
+    root: INFO
+    com.agentflow: DEBUG
 
 jwt:
   secret: ${JWT_SECRET}

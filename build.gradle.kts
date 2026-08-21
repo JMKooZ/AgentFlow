@@ -13,6 +13,15 @@ java {
     }
 }
 
+configurations {
+    all {
+        exclude(
+            group = "org.springframework.boot",
+            module = "spring-boot-starter-logging"
+        )
+    }
+}
+
 repositories {
     mavenCentral()
 }
@@ -27,6 +36,9 @@ dependencies {
     implementation("io.jsonwebtoken:jjwt-api:0.12.6")
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.6")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.6")
+
+    // log4j2
+    implementation("org.springframework.boot:spring-boot-starter-log4j2")
 
     // MySQL
     runtimeOnly("com.mysql:mysql-connector-j")
