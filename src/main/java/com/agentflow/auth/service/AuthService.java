@@ -3,6 +3,8 @@ package com.agentflow.auth.service;
 import com.agentflow.auth.dto.LoginRequest;
 import com.agentflow.auth.dto.LoginResponse;
 import com.agentflow.auth.jwt.JwtProvider;
+import com.agentflow.common.exception.AgentFlowException;
+import com.agentflow.common.exception.ErrorCode;
 import com.agentflow.user.entity.User;
 import com.agentflow.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -20,14 +22,12 @@ public class AuthService {
 
     public LoginResponse login(LoginRequest request) {
         User user = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> new IllegalArgumentException("이메일 또는 비밀번호가 올바르지 않습니다."));
+                .orElseThrow(() -> new AgentFlowException(ErrorCode.INVALID_INPUT));
         if (!passwordEncoder.matches(
                 request.password(),
                 user.getPassword()
         )) {
-            throw new IllegalArgumentException(
-                    "이메일 또는 비밀번호가 올바르지 않습니다."
-            );
+            throw new AgentFlowException(ErrorCode.INVALID_INPUT);
         }
 
         String accessToken = jwtProvider.createAccessToken(user.getId(), user.getEmail());

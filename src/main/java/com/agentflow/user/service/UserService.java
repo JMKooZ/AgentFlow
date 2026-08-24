@@ -1,5 +1,7 @@
 package com.agentflow.user.service;
 
+import com.agentflow.common.exception.AgentFlowException;
+import com.agentflow.common.exception.ErrorCode;
 import com.agentflow.user.entity.User;
 import com.agentflow.user.entity.UserRole;
 import com.agentflow.user.repository.UserRepository;
@@ -23,7 +25,7 @@ public class UserService {
             String name
     ) {
         if (userRepository.existsByEmail(email)) {
-            throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
+            throw new AgentFlowException(ErrorCode.DUPLICATE_EMAIL);
         }
 
         String encodedPassword = passwordEncoder.encode(password);
