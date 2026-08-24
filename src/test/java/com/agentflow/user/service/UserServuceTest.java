@@ -1,7 +1,10 @@
 package com.agentflow.user.service;
 
+import com.agentflow.common.exception.AgentFlowException;
+import com.agentflow.common.exception.ErrorCode;
 import com.agentflow.user.entity.User;
 import com.agentflow.user.repository.UserRepository;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -39,7 +42,7 @@ class UserServiceTest {
 
         // then
         User user = userRepository.findById(userId)
-                .orElseThrow();
+                .orElseThrow(() -> new AgentFlowException(ErrorCode.USER_NOT_FOUND));
 
         assertThat(user.getEmail()).isEqualTo(email);
         assertThat(user.getName()).isEqualTo(name);
@@ -58,15 +61,15 @@ class UserServiceTest {
         );
 
         // when & then
-        org.assertj.core.api.Assertions.assertThatThrownBy(() ->
+        Assertions.assertThatThrownBy(() ->
                         userService.createUser(
                                 email,
                                 "password456",
                                 "두 번째 사용자"
                         )
                 )
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("이미 사용 중인 이메일입니다.");
+                .isInstanceOf(AgentFlowException.class)
+                .hasMessage(ErrorCode.DUPLICATE_EMAIL.getMessage());
     }
 
     @Test

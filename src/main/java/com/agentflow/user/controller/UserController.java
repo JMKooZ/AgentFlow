@@ -1,5 +1,6 @@
 package com.agentflow.user.controller;
 
+import com.agentflow.common.response.ApiResponse;
 import com.agentflow.user.dto.UserCreateRequest;
 import com.agentflow.user.dto.UserResponse;
 import com.agentflow.user.entity.User;
@@ -21,9 +22,7 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping
-    public ResponseEntity<UserResponse> createUser(
-            @Valid @RequestBody UserCreateRequest request
-    ) {
+    public ResponseEntity<ApiResponse<UserResponse>> createUser(@Valid @RequestBody UserCreateRequest request) {
         User user = userService.createUser(
                 request.email(),
                 request.password(),
@@ -32,13 +31,13 @@ public class UserController {
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(UserResponse.from(user));
+                .body(ApiResponse.success(UserResponse.from(user)));
     }
 
     @GetMapping("/me")
-    public ResponseEntity<?> getMyInfo(Authentication authentication) {
+    public ResponseEntity<ApiResponse<Map<String, Long>>> getMyInfo(Authentication authentication) {
         Long userId = (Long) authentication.getPrincipal();
 
-        return ResponseEntity.ok(Map.of("userId", userId));
+        return ResponseEntity.ok(ApiResponse.success(Map.of("userId", userId)));
     }
 }
