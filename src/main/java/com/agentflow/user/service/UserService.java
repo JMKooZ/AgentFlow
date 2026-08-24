@@ -39,4 +39,10 @@ public class UserService {
 
         return userRepository.save(user);
     }
+
+    @Transactional(readOnly = true)
+    public User getUser(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new AgentFlowException(ErrorCode.USER_NOT_FOUND));
+    }
 }

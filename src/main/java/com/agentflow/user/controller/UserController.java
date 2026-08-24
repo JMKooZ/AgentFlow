@@ -12,8 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
-
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
@@ -35,9 +33,10 @@ public class UserController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<ApiResponse<Map<String, Long>>> getMyInfo(Authentication authentication) {
+    public ResponseEntity<ApiResponse<UserResponse>> getMyInfo(Authentication authentication) {
         Long userId = (Long) authentication.getPrincipal();
 
-        return ResponseEntity.ok(ApiResponse.success(Map.of("userId", userId)));
+        User user = userService.getUser(userId);
+        return ResponseEntity.ok(ApiResponse.success(UserResponse.from(user)));
     }
 }
