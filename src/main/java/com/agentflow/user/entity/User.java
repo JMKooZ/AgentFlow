@@ -2,7 +2,6 @@ package com.agentflow.user.entity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
-import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -83,12 +82,7 @@ public class User {
         this.updatedAt = LocalDateTime.now();
     }
 
-    public static User create(
-            String email,
-            String password,
-            String name,
-            UserRole role
-    ) {
+    public static User create(String email, String password, String name, UserRole role) {
         User user = new User();
 
         user.email = email;
@@ -98,5 +92,13 @@ public class User {
         user.status = UserStatus.ACTIVE;
 
         return user;
+    }
+
+    public void updateName(String name) {
+        this.name = name;
+    }
+
+    public void updatePassword(String password) {
+        this.password = password;
     }
 }
