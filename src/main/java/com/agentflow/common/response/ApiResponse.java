@@ -32,4 +32,13 @@ public record ApiResponse<T>(
                 null
         );
     }
+
+    public static <T> ApiResponse<T> fail(String code, String message, T data) {
+        return new ApiResponse<>(
+                false,
+                code,
+                message,
+                data
+        );
+    }
 }
