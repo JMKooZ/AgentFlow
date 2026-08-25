@@ -13,12 +13,14 @@ import java.util.Date;
 public class JwtProvider {
     private final SecretKey secretKey;
     private final long accessTokenExpiration;
+    private final long refreshTokenExpiration;
 
     public JwtProvider(JwtProperties jwtProperties) {
         this.secretKey = Keys.hmacShaKeyFor(
                 jwtProperties.secret().getBytes(StandardCharsets.UTF_8)
         );
         this.accessTokenExpiration = jwtProperties.accessTokenExpiration();
+        this.refreshTokenExpiration = jwtProperties.refreshTokenExpiration();
     }
 
     /**
@@ -31,6 +33,21 @@ public class JwtProvider {
         return Jwts.builder()
                 .subject(String.valueOf(userId))
                 .claim("email", email)
+                .issuedAt(now)
+                .expiration(expiration)
+                .signWith(secretKey)
+                .compact();
+    }
+
+    /**
+     * Refresh Token 생성
+     */
+    public String createRefreshToken(Long userId) {
+        Date now = new Date();
+        Date expiration = new Date(now.getTime() + refreshTokenExpiration);
+
+        return Jwts.builder()
+                .subject(String.valueOf(userId))
                 .issuedAt(now)
                 .expiration(expiration)
                 .signWith(secretKey)

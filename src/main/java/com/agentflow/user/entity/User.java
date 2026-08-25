@@ -8,15 +8,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(
-        name = "users",
-        uniqueConstraints = {
-                @UniqueConstraint(
-                        name = "uk_users_email",
-                        columnNames = "email"
-                )
-        }
-)
+@Table(name = "users", uniqueConstraints = {@UniqueConstraint(name = "uk_users_email", columnNames = "email")})
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class User {
@@ -24,49 +16,27 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(
-            nullable = false,
-            length = 255
-    )
+    @Column(nullable = false, length = 255)
     private String email;
 
-    @Column(
-            nullable = false,
-            length = 255
-    )
+    @Column(nullable = false, length = 255)
     private String password;
 
-    @Column(
-            nullable = false,
-            length = 100
-    )
+    @Column(nullable = false, length = 100)
     private String name;
 
     @Enumerated(EnumType.STRING)
-    @Column(
-            nullable = false,
-            length = 20
-    )
+    @Column(nullable = false, length = 20)
     private UserRole role;
 
     @Enumerated(EnumType.STRING)
-    @Column(
-            nullable = false,
-            length = 20
-    )
+    @Column(nullable = false, length = 20)
     private UserStatus status;
 
-    @Column(
-            name = "created_at",
-            nullable = false,
-            updatable = false
-    )
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(
-            name = "updated_at",
-            nullable = false
-    )
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
     @PrePersist

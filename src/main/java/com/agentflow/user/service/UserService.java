@@ -20,23 +20,14 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
-    public User createUser(
-            String email,
-            String password,
-            String name
-    ) {
+    public User createUser(String email, String password, String name) {
         if (userRepository.existsByEmail(email)) {
             throw new AgentFlowException(ErrorCode.DUPLICATE_EMAIL);
         }
 
         String encodedPassword = passwordEncoder.encode(password);
 
-        User user = User.create(
-                email,
-                encodedPassword,
-                name,
-                UserRole.USER
-        );
+        User user = User.create(email, encodedPassword, name, UserRole.USER);
 
         return userRepository.save(user);
     }
