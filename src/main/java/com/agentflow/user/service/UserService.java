@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -19,24 +20,37 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
-    public User createUser(
-            String email,
-            String password,
-            String name
-    ) {
+    public User createUser(String email, String password, String name) {
         if (userRepository.existsByEmail(email)) {
             throw new AgentFlowException(ErrorCode.DUPLICATE_EMAIL);
         }
 
         String encodedPassword = passwordEncoder.encode(password);
 
-        User user = User.create(
-                email,
-                encodedPassword,
-                name,
-                UserRole.USER
-        );
+        User user = User.create(email, encodedPassword, name, UserRole.USER);
 
         return userRepository.save(user);
+    }
+
+    @Transactional(readOnly = true)
+    public User getUser(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new AgentFlowException(ErrorCode.USER_NOT_FOUND));
+    }
+
+    @Transactional
+    public User updateUser(Long userId, String name, String password) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AgentFlowException(ErrorCode.USER_NOT_FOUND));
+
+        if (StringUtils.hasText(name)) {
+            user.updateName(name);
+        }
+
+        if (StringUtils.hasText(password)) {
+            user.updatePassword(passwordEncoder.encode(password));
+        }
+
+        return user;
     }
 }
