@@ -45,8 +45,8 @@ public class AuthService {
         return new LoginResponse(accessToken, refreshToken, user.getId(), user.getEmail(), user.getName());
     }
 
-    @Transactional(readOnly = true)
-    public String refreshAccessToken(String refreshToken) {
+    @Transactional
+    public LoginResponse refreshAccessToken(String refreshToken) {
         // 1. jwt 자체 검증
         if (!jwtProvider.validateToken(refreshToken)) {
             throw new AgentFlowException(ErrorCode.INVALID_INPUT);
@@ -61,6 +61,14 @@ public class AuthService {
         // 4. refresh token과 연결된 사용자 확인
         User user = savedToken.getUser();
         // 5. 새로운 access token 발급
-        return jwtProvider.createAccessToken(user.getId(), user.getEmail());
+        String accessToken = jwtProvider.createAccessToken(user.getId(), user.getEmail());
+        // 6. 새로운 refresh token 생성
+        String newRefreshToken = jwtProvider.createRefreshToken(user.getId());
+        // 7. 새로운 refresh token 만료시간
+        LocalDateTime newRefreshTokenExpiresAt = LocalDateTime.now().plusSeconds(jwtProperties.refreshTokenExpiration() / 1000);
+        // 8. 새로운 refresh token 변경
+        savedToken.updateToken(newRefreshToken, newRefreshTokenExpiresAt);
+        // 9. access, refresh token 반환
+        return new LoginResponse(accessToken, newRefreshToken, user.getId(), user.getEmail(), user.getName());
     }
 }
