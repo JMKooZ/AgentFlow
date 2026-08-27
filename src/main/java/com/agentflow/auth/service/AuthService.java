@@ -36,11 +36,11 @@ public class AuthService {
 
         String accessToken = jwtProvider.createAccessToken(user.getId(), user.getEmail());
         String refreshToken = jwtProvider.createRefreshToken(user.getId());
-        LocalDateTime refreshTokenExpiresAt = LocalDateTime.now().plusSeconds(jwtProperties.refreshTokenExpiration() / 1000);
 
-        refreshTokenRepository.findByUser(user)
-                .ifPresentOrElse(existingToken -> existingToken.updateToken(refreshToken, refreshTokenExpiresAt),
-                        () -> refreshTokenRepository.save(new RefreshToken(user, refreshToken, refreshTokenExpiresAt)));
+        refreshTokenRepository.findAllByUser(user)
+                .forEach(RefreshToken::revoke);
+
+        refreshTokenRepository.save(new RefreshToken(user, refreshToken, LocalDateTime.now().plusSeconds(jwtProperties.refreshTokenExpiration() / 1000)));
 
         return new LoginResponse(accessToken, refreshToken, user.getId(), user.getEmail(), user.getName());
     }
@@ -79,5 +79,12 @@ public class AuthService {
         refreshTokenRepository.save(new RefreshToken(user, newRefreshToken, newRefreshTokenExpiresAt));
         // 11. access, refresh token 반환
         return new LoginResponse(accessToken, newRefreshToken, user.getId(), user.getEmail(), user.getName());
+    }
+
+    @Transactional
+    public void logout(String refreshToken) {
+        RefreshToken savedToken = refreshTokenRepository.findByToken(refreshToken)
+                .orElseThrow(() -> new AgentFlowException(ErrorCode.INVALID_INPUT));
+        savedToken.revoke();
     }
 }
