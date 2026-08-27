@@ -58,17 +58,26 @@ public class AuthService {
         if (savedToken.isExpired()) {
             throw new AgentFlowException(ErrorCode.INVALID_INPUT);
         }
-        // 4. refresh token과 연결된 사용자 확인
+
+        // refresh token 과 연결된 사용자 확인
         User user = savedToken.getUser();
-        // 5. 새로운 access token 발급
+
+        // 4. 이미 폐기된 refresh token인지 확인
+        if (savedToken.isRevoked()) {
+            refreshTokenRepository.findAllByUser(user).forEach(RefreshToken::revoke);
+            throw new AgentFlowException(ErrorCode.INVALID_INPUT);
+        }
+        // 6. 새로운 access token 발급
         String accessToken = jwtProvider.createAccessToken(user.getId(), user.getEmail());
-        // 6. 새로운 refresh token 생성
+        // 7. 새로운 refresh token 생성
         String newRefreshToken = jwtProvider.createRefreshToken(user.getId());
-        // 7. 새로운 refresh token 만료시간
+        // 8. 새로운 refresh token 만료시간
         LocalDateTime newRefreshTokenExpiresAt = LocalDateTime.now().plusSeconds(jwtProperties.refreshTokenExpiration() / 1000);
-        // 8. 새로운 refresh token 변경
-        savedToken.updateToken(newRefreshToken, newRefreshTokenExpiresAt);
-        // 9. access, refresh token 반환
+        // 9. 기존 refresh token 폐기
+        savedToken.revoke();
+        //10. 새로운 refresh token 저장
+        refreshTokenRepository.save(new RefreshToken(user, newRefreshToken, newRefreshTokenExpiresAt));
+        // 11. access, refresh token 반환
         return new LoginResponse(accessToken, newRefreshToken, user.getId(), user.getEmail(), user.getName());
     }
 }
