@@ -34,7 +34,7 @@ public class AuthService {
             throw new AgentFlowException(ErrorCode.INVALID_INPUT);
         }
 
-        String accessToken = jwtProvider.createAccessToken(user.getId(), user.getEmail());
+        String accessToken = jwtProvider.createAccessToken(user.getId(), user.getEmail(), String.valueOf(user.getRole()));
         String refreshToken = jwtProvider.createRefreshToken(user.getId());
 
         refreshTokenRepository.findAllByUser(user)
@@ -68,7 +68,7 @@ public class AuthService {
             throw new AgentFlowException(ErrorCode.INVALID_INPUT);
         }
         // 6. 새로운 access token 발급
-        String accessToken = jwtProvider.createAccessToken(user.getId(), user.getEmail());
+        String accessToken = jwtProvider.createAccessToken(user.getId(), user.getEmail(), String.valueOf(user.getRole()));
         // 7. 새로운 refresh token 생성
         String newRefreshToken = jwtProvider.createRefreshToken(user.getId());
         // 8. 새로운 refresh token 만료시간
