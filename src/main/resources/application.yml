@@ -20,8 +20,19 @@ spring:
     enabled: true
     locations: classpath:db/migration
 
+  ai:
+    google:
+      genai:
+        api-key: ${GEMINI_API_KEY}
+        chat:
+          options:
+            model: gemini-3.6-flash
+            temperature: 0.7
+
 logging:
   level:
+    com.google.genai: DEBUG
+    org.springframework.ai: DEBUG
     org.hibernate.SQL: DEBUG
     org.springframework.security: INFO
     root: INFO

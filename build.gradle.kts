@@ -27,6 +27,9 @@ repositories {
 }
 
 dependencies {
+    implementation(platform("org.springframework.ai:spring-ai-bom:1.1.8"))
+    implementation("org.springframework.ai:spring-ai-starter-model-google-genai")
+
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
