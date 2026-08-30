@@ -1,8 +1,6 @@
 package com.agentflow.agent.service;
 
-import com.agentflow.agent.dto.AgentCreateRequest;
-import com.agentflow.agent.dto.AgentResponse;
-import com.agentflow.agent.dto.AgentUpdateRequest;
+import com.agentflow.agent.dto.*;
 import com.agentflow.agent.entity.Agent;
 import com.agentflow.agent.repository.AgentRepository;
 import com.agentflow.common.exception.AgentFlowException;
@@ -10,6 +8,7 @@ import com.agentflow.common.exception.ErrorCode;
 import com.agentflow.user.entity.User;
 import com.agentflow.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +21,7 @@ public class AgentService {
 
     private final AgentRepository agentRepository;
     private final UserRepository userRepository;
+    private final ChatClient chatClient;
 
     @Transactional
     public AgentResponse create(Long userId, AgentCreateRequest request) {
@@ -59,8 +59,24 @@ public class AgentService {
         agentRepository.delete(agent);
     }
 
+    public AgentExecuteResponse execute(Long userId, Long agentId, AgentExecuteRequest request) {
+        Agent agent = findAgent(agentId, userId);
+        String answer = chatClient
+                .prompt()
+                .system("""
+                        너는 %s라는 AI Agent다.
+                        너의 역할은 다음과 같다.
+        
+                        %s
+                        """.formatted(agent.getName(), agent.getDescription()))
+                .user(request.message())
+                .call()
+                .content();
+        return new AgentExecuteResponse(answer);
+    }
+
     private Agent findAgent(Long agentId, Long userId) {
         return agentRepository.findByIdAndUserId(agentId, userId)
-                .orElseThrow(()-> new AgentFlowException(ErrorCode.AGENT_NOT_FOUND));
+                .orElseThrow(() -> new AgentFlowException(ErrorCode.AGENT_NOT_FOUND));
     }
 }

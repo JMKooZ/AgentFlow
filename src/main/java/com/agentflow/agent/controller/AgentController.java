@@ -1,8 +1,6 @@
 package com.agentflow.agent.controller;
 
-import com.agentflow.agent.dto.AgentCreateRequest;
-import com.agentflow.agent.dto.AgentResponse;
-import com.agentflow.agent.dto.AgentUpdateRequest;
+import com.agentflow.agent.dto.*;
 import com.agentflow.agent.service.AgentService;
 import com.agentflow.common.response.ApiResponse;
 import jakarta.validation.Valid;
@@ -57,6 +55,13 @@ public class AgentController {
 
         agentService.delete(userId, agentId);
         return ResponseEntity.ok(ApiResponse.success(null));
+    }
+
+    @PostMapping("/{agentId}/execute")
+    public ResponseEntity<ApiResponse<AgentExecuteResponse>> execute(Authentication authentication, @PathVariable Long agentId, @Valid @RequestBody AgentExecuteRequest request) {
+        Long userId = getUserId(authentication);
+        AgentExecuteResponse response = agentService.execute(userId, agentId, request);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     private Long getUserId(Authentication authentication) {
