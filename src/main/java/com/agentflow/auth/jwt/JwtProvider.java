@@ -26,13 +26,14 @@ public class JwtProvider {
     /**
      * Access Token 생성
      */
-    public String createAccessToken(Long userId, String email) {
+    public String createAccessToken(Long userId, String email, String role) {
         Date now = new Date();
         Date expiration = new Date(now.getTime() + accessTokenExpiration);
 
         return Jwts.builder()
                 .subject(String.valueOf(userId))
                 .claim("email", email)
+                .claim("role", role)
                 .issuedAt(now)
                 .expiration(expiration)
                 .signWith(secretKey)
@@ -91,5 +92,13 @@ public class JwtProvider {
     public String getEmail(String token) {
         Claims claims = parseToken(token);
         return claims.get("email", String.class);
+    }
+
+    /**
+     * JWT에서 role 추출
+     */
+    public String getRole(String token) {
+        Claims claims = parseToken(token);
+        return claims.get("role", String.class);
     }
 }

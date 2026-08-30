@@ -19,14 +19,21 @@ public class RefreshToken {
     private Long id;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false, unique = true)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @Column(nullable = false, unique = true, length = 500)
     private String token;
 
     @Column(nullable = false)
+    private boolean revoked = false;
+
+    @Column(nullable = false)
     private LocalDateTime expiresAt;
+
+    public void revoke(){
+        this.revoked = true;
+    }
 
     public RefreshToken(User user, String token, LocalDateTime expiresAt) {
         this.user = user;
