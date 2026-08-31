@@ -2,6 +2,7 @@ package com.agentflow.agent.controller;
 
 import com.agentflow.agent.dto.*;
 import com.agentflow.agent.service.AgentService;
+import com.agentflow.common.CommonFunction;
 import com.agentflow.common.response.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +20,7 @@ public class AgentController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<AgentResponse>> create(Authentication authentication, @Valid @RequestBody AgentCreateRequest request) {
-        Long userId = getUserId(authentication);
+        Long userId = CommonFunction.getUserId(authentication);
 
         AgentResponse response = agentService.create(userId, request);
         return ResponseEntity.ok(ApiResponse.success(response));
@@ -27,7 +28,7 @@ public class AgentController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<AgentResponse>>> findMyAgents(Authentication authentication) {
-        Long userId = getUserId(authentication);
+        Long userId = CommonFunction.getUserId(authentication);
 
         List<AgentResponse> responses = agentService.findMyAgents(userId);
         return ResponseEntity.ok(ApiResponse.success(responses));
@@ -35,7 +36,7 @@ public class AgentController {
 
     @GetMapping("/{agentId}")
     public ResponseEntity<ApiResponse<AgentResponse>> find(Authentication authentication, @PathVariable Long agentId) {
-        Long userId = getUserId(authentication);
+        Long userId = CommonFunction.getUserId(authentication);
 
         AgentResponse response = agentService.find(userId, agentId);
         return ResponseEntity.ok(ApiResponse.success(response));
@@ -43,7 +44,7 @@ public class AgentController {
 
     @PutMapping("/{agentId}")
     public ResponseEntity<ApiResponse<AgentResponse>> update(Authentication authentication, @PathVariable Long agentId, @Valid @RequestBody AgentUpdateRequest request) {
-        Long userId = getUserId(authentication);
+        Long userId = CommonFunction.getUserId(authentication);
 
         AgentResponse response = agentService.update(userId, agentId, request);
         return ResponseEntity.ok(ApiResponse.success(response));
@@ -51,7 +52,7 @@ public class AgentController {
 
     @DeleteMapping("/{agentId}")
     public ResponseEntity<ApiResponse<AgentResponse>> delete(Authentication authentication, @PathVariable Long agentId) {
-        Long userId = getUserId(authentication);
+        Long userId = CommonFunction.getUserId(authentication);
 
         agentService.delete(userId, agentId);
         return ResponseEntity.ok(ApiResponse.success(null));
@@ -59,12 +60,9 @@ public class AgentController {
 
     @PostMapping("/{agentId}/execute")
     public ResponseEntity<ApiResponse<AgentExecuteResponse>> execute(Authentication authentication, @PathVariable Long agentId, @Valid @RequestBody AgentExecuteRequest request) {
-        Long userId = getUserId(authentication);
+        Long userId = CommonFunction.getUserId(authentication);
+
         AgentExecuteResponse response = agentService.execute(userId, agentId, request);
         return ResponseEntity.ok(ApiResponse.success(response));
-    }
-
-    private Long getUserId(Authentication authentication) {
-        return (Long) authentication.getPrincipal();
     }
 }

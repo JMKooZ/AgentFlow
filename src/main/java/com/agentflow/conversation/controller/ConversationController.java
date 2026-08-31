@@ -24,4 +24,11 @@ public class ConversationController {
         ConversationResponse response = conversationService.create(userId, agentId, request);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
+
+    @DeleteMapping("/{conversationId}")
+    public ResponseEntity<ApiResponse<ConversationResponse>> delete(Authentication authentication, @PathVariable Long conversationId) {
+        Long userId = CommonFunction.getUserId(authentication);
+        conversationService.delete(userId, conversationId);
+        return ResponseEntity.ok(ApiResponse.success(null));
+    }
 }

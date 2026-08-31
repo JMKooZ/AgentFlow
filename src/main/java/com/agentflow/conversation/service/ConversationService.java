@@ -31,4 +31,10 @@ public class ConversationService {
 
         return new ConversationResponse(saved.getId(), agent.getId(), saved.getTitle());
     }
+
+    @Transactional
+    public void delete(Long userId, Long conversationId) {
+        Conversation conversation = conversationRepository.findByIdAndUserId(conversationId, userId).orElseThrow(() -> new AgentFlowException(ErrorCode.CONVERSATION_NOT_FOUND));
+        conversationRepository.delete(conversation);
+    }
 }

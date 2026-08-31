@@ -38,7 +38,7 @@ public class Conversation {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "conversation", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "conversation", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Message> messages = new ArrayList<>();
 
     public Conversation(User user, Agent agent, String title) {
