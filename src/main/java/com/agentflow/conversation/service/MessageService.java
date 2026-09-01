@@ -1,5 +1,6 @@
 package com.agentflow.conversation.service;
 
+import com.agentflow.agent.service.AgentExecutor;
 import com.agentflow.common.exception.AgentFlowException;
 import com.agentflow.common.exception.ErrorCode;
 import com.agentflow.conversation.dto.MessageCreateRequest;
@@ -10,13 +11,11 @@ import com.agentflow.conversation.repository.ConversationRepository;
 import com.agentflow.conversation.repository.MessageRepository;
 import com.agentflow.user.entity.UserRole;
 import lombok.RequiredArgsConstructor;
-import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -25,13 +24,11 @@ public class MessageService {
 
     private final ConversationRepository conversationRepository;
     private final MessageRepository messageRepository;
-    private final ChatClient chatClient;
+    private final AgentExecutor agentExecutor;
 
     @Transactional
     public MessageResponse send(Long userId, Long conversationId, MessageCreateRequest request) {
         Conversation conversation = conversationRepository.findByIdAndUserId(conversationId, userId).orElseThrow(() -> new AgentFlowException(ErrorCode.CONVERSATION_NOT_FOUND));
-
-//        List<Message> previousMessages = messageRepository.findAllByConversationIdOrderByCreatedAtAsc(conversationId);
 
         Message userMessage = new Message(conversation, UserRole.USER, request.content());
 
@@ -44,32 +41,7 @@ public class MessageService {
                         .map(this::convertMessage)
                         .toList();
 
-        String systemPrompt = """
-                너는 %s라는 AI Agent다.
-
-                너의 역할:
-                %s
-                """.formatted(
-                conversation.getAgent().getName(),
-                conversation.getAgent().getDescription()
-        );
-
-//        for (Message message : previousMessages) {
-//            if (UserRole.USER.equals(message.getRole())) {
-//                chatMessages.add(new UserMessage(message.getContent()));
-//            } else if (UserRole.ASSISTANT.equals(message.getRole())) {
-//                chatMessages.add(new AssistantMessage(message.getContent()));
-//            }
-//
-//            chatMessages.add(new UserMessage(request.content()));
-//        }
-
-        String answer = chatClient
-                .prompt()
-                .system(systemPrompt)
-                .messages(chatMessages)
-                .call()
-                .content();
+        String answer = agentExecutor.execute(conversation.getAgent(), chatMessages);
 
         Message assistantMessage = new Message(conversation, UserRole.ASSISTANT, answer);
 

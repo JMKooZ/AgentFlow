@@ -1,11 +1,12 @@
 CREATE TABLE agents
 (
-    id          BIGINT       NOT NULL AUTO_INCREMENT,
-    user_id     BIGINT       NOT NULL,
-    name        VARCHAR(100) NOT NULL,
-    description VARCHAR(500),
-    created_at  DATETIME     NOT NULL,
-    updated_at  DATETIME     NOT NULL,
+    id              BIGINT       NOT NULL AUTO_INCREMENT,
+    user_id         BIGINT       NOT NULL,
+    name            VARCHAR(100) NOT NULL,
+    description     VARCHAR(500),
+    system_prompt   TEXT         NOT NULL,
+    created_at      DATETIME     NOT NULL,
+    updated_at      DATETIME     NOT NULL,
 
     CONSTRAINT pk_agents PRIMARY KEY (id),
 

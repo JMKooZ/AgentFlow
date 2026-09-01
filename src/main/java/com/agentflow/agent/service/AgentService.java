@@ -8,7 +8,6 @@ import com.agentflow.common.exception.ErrorCode;
 import com.agentflow.user.entity.User;
 import com.agentflow.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,14 +20,14 @@ public class AgentService {
 
     private final AgentRepository agentRepository;
     private final UserRepository userRepository;
-    private final ChatClient chatClient;
+    private final AgentExecutor agentExecutor;
 
     @Transactional
     public AgentResponse create(Long userId, AgentCreateRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AgentFlowException(ErrorCode.USER_NOT_FOUND));
 
-        Agent agent = new Agent(user, request.name(), request.description());
+        Agent agent = new Agent(user, request.name(), request.description(), request.systemPrompt());
 
         agentRepository.save(agent);
         return AgentResponse.from(agent);
@@ -49,7 +48,7 @@ public class AgentService {
     @Transactional
     public AgentResponse update(Long userId, Long agentId, AgentUpdateRequest request) {
         Agent agent = findAgent(agentId, userId);
-        agent.update(request.name(), request.description());
+        agent.update(request.name(), request.description(), request.systemPrompt());
         return AgentResponse.from(agent);
     }
 
@@ -61,17 +60,7 @@ public class AgentService {
 
     public AgentExecuteResponse execute(Long userId, Long agentId, AgentExecuteRequest request) {
         Agent agent = findAgent(agentId, userId);
-        String answer = chatClient
-                .prompt()
-                .system("""
-                        너는 %s라는 AI Agent다.
-                        너의 역할은 다음과 같다.
-        
-                        %s
-                        """.formatted(agent.getName(), agent.getDescription()))
-                .user(request.message())
-                .call()
-                .content();
+        String answer = agentExecutor.execute(agent, request.message());
         return new AgentExecuteResponse(answer);
     }
 
