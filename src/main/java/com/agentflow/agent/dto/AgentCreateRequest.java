@@ -10,6 +10,8 @@ public record AgentCreateRequest(
         String name,
 
         @Size(max = 500, message = "Agent 설명은 500자 이하여야 합니다.")
-        String description
+        String description,
+
+        String systemPrompt
 ) {
 }

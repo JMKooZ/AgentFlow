@@ -9,10 +9,11 @@ public record AgentResponse(
         Long userId,
         String name,
         String description,
+        String systemPrompt,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
     public static AgentResponse from(Agent agent) {
-        return new AgentResponse(agent.getId(), agent.getUser().getId(), agent.getName(), agent.getDescription(), agent.getCreatedAt(), agent.getUpdatedAt());
+        return new AgentResponse(agent.getId(), agent.getUser().getId(), agent.getName(), agent.getDescription(), agent.getSystemPrompt(), agent.getCreatedAt(), agent.getUpdatedAt());
     }
 }
