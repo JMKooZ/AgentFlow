@@ -6,7 +6,7 @@ CREATE TABLE conversations
     title      VARCHAR(255) NOT NULL,
     created_at DATETIME     NOT NULL,
     updated_at DATETIME     NOT NULL,
-
+    summary    TEXT
     CONSTRAINT pk_conversations PRIMARY KEY (id),
 
     CONSTRAINT fk_conversations_user

@@ -13,9 +13,13 @@ import com.agentflow.user.entity.UserRole;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -34,7 +38,11 @@ public class MessageService {
 
         messageRepository.save(userMessage);
 
-        List<Message> messages = messageRepository.findAllByConversationIdOrderByCreatedAtAsc(conversationId);
+        Pageable pageable = PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdAt"));
+
+        List<Message> messages = messageRepository.findByConversationId(conversationId, pageable);
+
+        Collections.reverse(messages);
 
         List<org.springframework.ai.chat.messages.Message> chatMessages =
                 messages.stream()
