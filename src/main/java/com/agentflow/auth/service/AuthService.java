@@ -44,7 +44,6 @@ public class AuthService {
 
         refreshTokenRepository.save(new RefreshToken(user, refreshToken, LocalDateTime.now().plusSeconds(jwtProperties.refreshTokenExpiration() / 1000)));
 
-        log.debug("request: {}", request);
         return new LoginResponse(accessToken, refreshToken, user.getId(), user.getEmail(), user.getName());
     }
 

@@ -5,6 +5,7 @@ import com.agentflow.agent.entity.Agent;
 import com.agentflow.agent.repository.AgentRepository;
 import com.agentflow.common.exception.AgentFlowException;
 import com.agentflow.common.exception.ErrorCode;
+import com.agentflow.conversation.repository.ConversationRepository;
 import com.agentflow.user.entity.User;
 import com.agentflow.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ public class AgentService {
 
     private final AgentRepository agentRepository;
     private final UserRepository userRepository;
+    private final ConversationRepository conversationRepository;
     private final AgentExecutor agentExecutor;
 
     @Transactional
@@ -55,6 +57,11 @@ public class AgentService {
     @Transactional
     public void delete(Long userId, Long agentId) {
         Agent agent = findAgent(agentId, userId);
+
+        if (conversationRepository.existsByAgentId(agentId)) {
+            throw new AgentFlowException(ErrorCode.AGENT_HAS_CONVERSATIONS);
+        }
+
         agentRepository.delete(agent);
     }
 

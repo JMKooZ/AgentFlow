@@ -1,6 +1,5 @@
 package com.agentflow.conversation.entity;
 
-import com.agentflow.user.entity.UserRole;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -31,7 +30,7 @@ public class Message {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    public Message(Conversation conversation, UserRole role, String content) {
+    public Message(Conversation conversation, MessageRole role, String content) {
         this.conversation = conversation;
         this.role = role.name();
         this.content = content;
