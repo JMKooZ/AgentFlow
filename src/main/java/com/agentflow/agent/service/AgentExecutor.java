@@ -25,9 +25,13 @@ public class AgentExecutor {
     }
 
     public String execute(Agent agent, List<Message> messages) {
+        return execute(agent, messages, null);
+    }
+
+    public String execute(Agent agent, List<Message> messages, String summary) {
         return chatClient
                 .prompt()
-                .system(agentPromptBuilder.build(agent))
+                .system(agentPromptBuilder.build(agent, summary))
                 .messages(messages)
                 .call()
                 .content();

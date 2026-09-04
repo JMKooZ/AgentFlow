@@ -41,6 +41,9 @@ public class Conversation {
     @Column(columnDefinition = "TEXT")
     private String summary;
 
+    @Column(name = "last_summarized_message_id")
+    private Long lastSummarizedMessageId;
+
     @OneToMany(mappedBy = "conversation", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Message> messages = new ArrayList<>();
 
@@ -52,8 +55,9 @@ public class Conversation {
         this.updatedAt = LocalDateTime.now();
     }
 
-    public void updateSummary(String summary) {
+    public void updateSummary(String summary, Long lastSummarizedMessageId) {
         this.summary = summary;
+        this.lastSummarizedMessageId = lastSummarizedMessageId;
         this.updatedAt = LocalDateTime.now();
     }
 }
