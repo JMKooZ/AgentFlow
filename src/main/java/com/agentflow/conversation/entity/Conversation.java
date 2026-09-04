@@ -38,6 +38,12 @@ public class Conversation {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column(columnDefinition = "TEXT")
+    private String summary;
+
+    @Column(name = "last_summarized_message_id")
+    private Long lastSummarizedMessageId;
+
     @OneToMany(mappedBy = "conversation", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Message> messages = new ArrayList<>();
 
@@ -46,6 +52,12 @@ public class Conversation {
         this.agent = agent;
         this.title = title;
         this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void updateSummary(String summary, Long lastSummarizedMessageId) {
+        this.summary = summary;
+        this.lastSummarizedMessageId = lastSummarizedMessageId;
         this.updatedAt = LocalDateTime.now();
     }
 }

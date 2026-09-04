@@ -4,6 +4,8 @@ CREATE TABLE conversations
     user_id    BIGINT       NOT NULL,
     agent_id   BIGINT       NOT NULL,
     title      VARCHAR(255) NOT NULL,
+    last_summarized_message_id BIGINT,
+    summary    TEXT,
     created_at DATETIME     NOT NULL,
     updated_at DATETIME     NOT NULL,
 
