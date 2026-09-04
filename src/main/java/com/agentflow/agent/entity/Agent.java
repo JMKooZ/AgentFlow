@@ -32,23 +32,28 @@ public class Agent {
     @Column(length = 500)
     private String description;
 
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private String systemPrompt;
+
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-    public Agent(User user, String name, String description) {
+    public Agent(User user, String name, String description, String systemPrompt) {
         this.user = user;
         this.name = name;
         this.description = description;
+        this.systemPrompt = systemPrompt;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
 
-    public void update(String name, String description) {
+    public void update(String name, String description, String systemPrompt) {
         this.name = name;
         this.description = description;
+        this.systemPrompt = systemPrompt;
         this.updatedAt = LocalDateTime.now();
     }
 }
