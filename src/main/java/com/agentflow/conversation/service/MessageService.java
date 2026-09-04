@@ -7,9 +7,9 @@ import com.agentflow.conversation.dto.MessageCreateRequest;
 import com.agentflow.conversation.dto.MessageResponse;
 import com.agentflow.conversation.entity.Conversation;
 import com.agentflow.conversation.entity.Message;
+import com.agentflow.conversation.entity.MessageRole;
 import com.agentflow.conversation.repository.ConversationRepository;
 import com.agentflow.conversation.repository.MessageRepository;
-import com.agentflow.user.entity.UserRole;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.messages.AssistantMessage;
@@ -42,7 +42,7 @@ public class MessageService {
         Conversation conversation = conversationRepository.findByIdAndUserId(conversationId, userId)
                 .orElseThrow(() -> new AgentFlowException(ErrorCode.CONVERSATION_NOT_FOUND));
 
-        Message userMessage = new Message(conversation, UserRole.USER, request.content());
+        Message userMessage = new Message(conversation, MessageRole.USER, request.content());
         messageRepository.save(userMessage);
 
         Pageable pageable = PageRequest.of(0, RECENT_MESSAGE_LIMIT, Sort.by(Sort.Direction.DESC, "createdAt"));
@@ -61,7 +61,7 @@ public class MessageService {
 
         String answer = agentExecutor.execute(conversation.getAgent(), chatMessages, conversation.getSummary());
 
-        Message assistantMessage = new Message(conversation, UserRole.ASSISTANT, answer);
+        Message assistantMessage = new Message(conversation, MessageRole.ASSISTANT, answer);
         Message savedMessage = messageRepository.save(assistantMessage);
         return new MessageResponse(savedMessage.getId(), savedMessage.getRole(), savedMessage.getContent());
     }

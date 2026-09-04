@@ -1,5 +1,6 @@
 package com.agentflow.user.controller;
 
+import com.agentflow.common.CommonFunction;
 import com.agentflow.common.response.ApiResponse;
 import com.agentflow.user.dto.UserCreateRequest;
 import com.agentflow.user.dto.UserResponse;
@@ -37,7 +38,7 @@ public class UserController {
 
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<UserResponse>> getMyInfo(Authentication authentication) {
-        Long userId = (Long) authentication.getPrincipal();
+        Long userId = CommonFunction.getUserId(authentication);
 
         User user = userService.getUser(userId);
         return ResponseEntity.ok(ApiResponse.success(UserResponse.from(user)));
@@ -45,7 +46,7 @@ public class UserController {
 
     @PutMapping("/me")
     public ResponseEntity<ApiResponse<UserResponse>> updateMyInfo(Authentication authentication, @Valid @RequestBody UserUpdateRequest request) {
-        Long userId = (Long) authentication.getPrincipal();
+        Long userId = CommonFunction.getUserId(authentication);
 
         User user = userService.updateUser(userId, request.name(), request.password());
 
