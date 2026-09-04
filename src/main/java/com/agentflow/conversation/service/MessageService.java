@@ -11,6 +11,7 @@ import com.agentflow.conversation.repository.ConversationRepository;
 import com.agentflow.conversation.repository.MessageRepository;
 import com.agentflow.user.entity.UserRole;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.data.domain.PageRequest;
@@ -22,11 +23,13 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Collections;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MessageService {
 
     private static final int RECENT_MESSAGE_LIMIT = 20;
+    private static final int SUMMARY_BATCH_SIZE = 5;
 
     private final ConversationRepository conversationRepository;
     private final MessageRepository messageRepository;
@@ -68,18 +71,21 @@ public class MessageService {
         Long lastSummarizedId = conversation.getLastSummarizedMessageId();
         long lowerBound = (lastSummarizedId != null) ? lastSummarizedId : 0L;
 
-        List<Message> messagesToSummarize = messageRepository
+        List<Message> pendingMessages = messageRepository
                 .findByConversationIdAndIdGreaterThanAndIdLessThanOrderByIdAsc(
                         conversation.getId(), lowerBound, windowStartId);
 
-        if (messagesToSummarize.isEmpty()) {
+        if (pendingMessages.size() < SUMMARY_BATCH_SIZE) {
             return;
         }
 
-        String newSummary = conversationSummaryService.summarize(conversation.getSummary(), messagesToSummarize);
-        Long newLastSummarizedId = messagesToSummarize.get(messagesToSummarize.size() - 1).getId();
-
-        conversation.updateSummary(newSummary, newLastSummarizedId);
+        try {
+            String newSummary = conversationSummaryService.summarize(conversation.getSummary(), pendingMessages);
+            Long newLastSummarizedId = pendingMessages.get(pendingMessages.size() - 1).getId();
+            conversation.updateSummary(newSummary, newLastSummarizedId);
+        } catch (Exception e) {
+            log.warn("대화 요약 생성 실패. conversationId={}, 다음 요청에서 재시도합니다.", conversation.getId(), e);
+        }
     }
 
     private org.springframework.ai.chat.messages.Message convertMessage(Message message) {
