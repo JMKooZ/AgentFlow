@@ -11,6 +11,7 @@ import com.agentflow.conversation.repository.ConversationRepository;
 import com.agentflow.conversation.repository.MessageRepository;
 import com.agentflow.user.entity.UserRole;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.data.domain.PageRequest;
@@ -19,14 +20,17 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MessageService {
 
     private static final int RECENT_MESSAGE_LIMIT = 20;
+    private static final int SUMMARY_BATCH_SIZE = 5;
 
     private final ConversationRepository conversationRepository;
     private final MessageRepository messageRepository;
@@ -45,10 +49,13 @@ public class MessageService {
         List<Message> recentMessages = messageRepository.findByConversationId(conversationId, pageable);
         Collections.reverse(recentMessages);
 
-        updateSummaryIfNeeded(conversation, recentMessages);
+        List<Message> pendingMessages = resolvePendingMessages(conversation, recentMessages);
+
+        List<Message> contextMessages = new ArrayList<>(pendingMessages);
+        contextMessages.addAll(recentMessages);
 
         List<org.springframework.ai.chat.messages.Message> chatMessages =
-                recentMessages.stream()
+                contextMessages.stream()
                         .map(this::convertMessage)
                         .toList();
 
@@ -59,27 +66,38 @@ public class MessageService {
         return new MessageResponse(savedMessage.getId(), savedMessage.getRole(), savedMessage.getContent());
     }
 
-    private void updateSummaryIfNeeded(Conversation conversation, List<Message> recentMessages) {
+    /**
+     * 윈도우 밖으로 밀려났지만 아직 요약되지 않은 메시지를 조회한다.
+     * - 개수가 임계값(SUMMARY_BATCH_SIZE) 이상이면 요약 LLM을 호출해 summary에 반영하고, 빈 리스트를 반환한다.
+     * - 임계값 미만이면 요약 호출 없이 그대로 반환한다 (호출부에서 원문 그대로 컨텍스트에 포함시켜 정보 유실을 막는다).
+     * - 요약 호출이 실패하면 메시지 목록을 그대로 반환해 이번 턴에는 원문으로라도 컨텍스트에 포함되게 한다.
+     */
+    private List<Message> resolvePendingMessages(Conversation conversation, List<Message> recentMessages) {
         if (recentMessages.isEmpty()) {
-            return;
+            return Collections.emptyList();
         }
 
         Long windowStartId = recentMessages.get(0).getId();
         Long lastSummarizedId = conversation.getLastSummarizedMessageId();
         long lowerBound = (lastSummarizedId != null) ? lastSummarizedId : 0L;
 
-        List<Message> messagesToSummarize = messageRepository
+        List<Message> pendingMessages = messageRepository
                 .findByConversationIdAndIdGreaterThanAndIdLessThanOrderByIdAsc(
                         conversation.getId(), lowerBound, windowStartId);
 
-        if (messagesToSummarize.isEmpty()) {
-            return;
+        if (pendingMessages.isEmpty() || pendingMessages.size() < SUMMARY_BATCH_SIZE) {
+            return pendingMessages;
         }
 
-        String newSummary = conversationSummaryService.summarize(conversation.getSummary(), messagesToSummarize);
-        Long newLastSummarizedId = messagesToSummarize.get(messagesToSummarize.size() - 1).getId();
-
-        conversation.updateSummary(newSummary, newLastSummarizedId);
+        try {
+            String newSummary = conversationSummaryService.summarize(conversation.getSummary(), pendingMessages);
+            Long newLastSummarizedId = pendingMessages.get(pendingMessages.size() - 1).getId();
+            conversation.updateSummary(newSummary, newLastSummarizedId);
+            return Collections.emptyList();
+        } catch (Exception e) {
+            log.warn("대화 요약 생성 실패. conversationId={}, 이번 턴은 원문으로 대체합니다.", conversation.getId(), e);
+            return pendingMessages;
+        }
     }
 
     private org.springframework.ai.chat.messages.Message convertMessage(Message message) {
