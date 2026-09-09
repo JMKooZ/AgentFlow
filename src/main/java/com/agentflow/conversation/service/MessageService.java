@@ -59,7 +59,7 @@ public class MessageService {
                         .map(this::convertMessage)
                         .toList();
 
-        String answer = agentExecutor.execute(conversation.getAgent(), chatMessages, conversation.getSummary());
+        String answer = agentExecutor.execute(conversation.getAgent(), chatMessages, conversation.getSummary(), userId);
 
         Message assistantMessage = new Message(conversation, MessageRole.ASSISTANT, answer);
         Message savedMessage = messageRepository.save(assistantMessage);

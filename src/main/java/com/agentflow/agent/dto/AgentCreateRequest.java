@@ -1,7 +1,10 @@
 package com.agentflow.agent.dto;
 
+import com.agentflow.agent.tool.AgentToolType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+
+import java.util.Set;
 
 public record AgentCreateRequest(
 
@@ -12,6 +15,8 @@ public record AgentCreateRequest(
         @Size(max = 500, message = "Agent 설명은 500자 이하여야 합니다.")
         String description,
 
-        String systemPrompt
+        String systemPrompt,
+
+        Set<AgentToolType> tools
 ) {
 }

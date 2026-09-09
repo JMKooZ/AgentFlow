@@ -1,7 +1,10 @@
 package com.agentflow.agent.dto;
 
+import com.agentflow.agent.tool.AgentToolType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+
+import java.util.Set;
 
 public record AgentUpdateRequest(
 
@@ -13,6 +16,8 @@ public record AgentUpdateRequest(
         String description,
 
         @NotBlank(message = "System Prompt는 필수입니다.")
-        String systemPrompt
+        String systemPrompt,
+
+        Set<AgentToolType> tools
 ) {
 }
