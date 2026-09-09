@@ -1,6 +1,6 @@
 package com.agentflow.agent.dto;
 
-import com.agentflow.agent.tool.AgentToolType;
+import com.agentflow.tool.AgentToolType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 

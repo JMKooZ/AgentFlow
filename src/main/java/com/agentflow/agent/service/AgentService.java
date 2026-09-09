@@ -3,7 +3,7 @@ package com.agentflow.agent.service;
 import com.agentflow.agent.dto.*;
 import com.agentflow.agent.entity.Agent;
 import com.agentflow.agent.repository.AgentRepository;
-import com.agentflow.agent.tool.AgentToolType;
+import com.agentflow.tool.AgentToolType;
 import com.agentflow.common.exception.AgentFlowException;
 import com.agentflow.common.exception.ErrorCode;
 import com.agentflow.conversation.repository.ConversationRepository;
@@ -68,6 +68,7 @@ public class AgentService {
         agentRepository.delete(agent);
     }
 
+    @Transactional
     public AgentExecuteResponse execute(Long userId, Long agentId, AgentExecuteRequest request) {
         Agent agent = findAgent(agentId, userId);
         String answer = agentExecutor.execute(agent, request.message(), userId);

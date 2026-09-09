@@ -1,6 +1,6 @@
 package com.agentflow.agent.entity;
 
-import com.agentflow.agent.tool.AgentToolType;
+import com.agentflow.tool.AgentToolType;
 import com.agentflow.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;

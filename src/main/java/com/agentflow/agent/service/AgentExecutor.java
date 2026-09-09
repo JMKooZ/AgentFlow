@@ -1,7 +1,7 @@
 package com.agentflow.agent.service;
 
 import com.agentflow.agent.entity.Agent;
-import com.agentflow.agent.tool.ToolRegistry;
+import com.agentflow.tool.ToolRegistry;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.Message;

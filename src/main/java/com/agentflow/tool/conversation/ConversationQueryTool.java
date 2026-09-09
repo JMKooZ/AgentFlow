@@ -1,4 +1,4 @@
-package com.agentflow.agent.tool;
+package com.agentflow.tool.conversation;
 
 import com.agentflow.conversation.entity.Conversation;
 import com.agentflow.conversation.repository.ConversationRepository;
@@ -10,12 +10,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * Spring Bean(@Component)이 아니다.
- * userId는 LLM이 넘기는 파라미터가 아니라, ToolRegistry가 요청마다
- * "로그인한 사용자 ID"로 직접 주입해서 새로 생성하는 인스턴스다.
- * 이렇게 해야 다른 사용자의 Conversation을 조회하도록 유도당할 여지가 없다.
- */
 @Slf4j
 public class ConversationQueryTool {
 
@@ -30,8 +24,7 @@ public class ConversationQueryTool {
         this.conversationRepository = conversationRepository;
     }
 
-    @Tool(description = "현재 사용자가 만든 대화(Conversation) 목록을 최신순으로 조회한다. " +
-            "사용자가 '내가 만든 대화 뭐 있어', '최근에 무슨 대화했지' 등을 물어볼 때 사용한다.")
+    @Tool(description = "현재 사용자가 만든 대화(Conversation) 목록을 최신순으로 조회한다.")
     public String listMyConversations() {
         List<Conversation> conversations = conversationRepository.findAllByUserId(userId);
 

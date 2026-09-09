@@ -1,4 +1,4 @@
-package com.agentflow.agent.tool;
+package com.agentflow.tool.calculator;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.tool.annotation.Tool;
