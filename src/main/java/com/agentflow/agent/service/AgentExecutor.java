@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
 
 import java.util.List;
 
@@ -34,6 +35,15 @@ public class AgentExecutor {
                 .system(agentPromptBuilder.build(agent, summary))
                 .messages(messages)
                 .call()
+                .content();
+    }
+
+    public Flux<String> stream(Agent agent, List<Message> messages, String summary) {
+        return chatClient
+                .prompt()
+                .system(agentPromptBuilder.build(agent, summary))
+                .messages(messages)
+                .stream()
                 .content();
     }
 }
