@@ -4,6 +4,7 @@ import com.agentflow.agent.entity.Agent;
 import com.agentflow.tool.AgentToolType;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Set;
 
 public record AgentResponse(
@@ -23,7 +24,7 @@ public record AgentResponse(
                 agent.getName(),
                 agent.getDescription(),
                 agent.getSystemPrompt(),
-                agent.getEnabledTools(),
+                new HashSet<>(agent.getEnabledTools()),
                 agent.getCreatedAt(),
                 agent.getUpdatedAt()
         );

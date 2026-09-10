@@ -12,11 +12,20 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/agents/{agentId}/conversations")
 @RequiredArgsConstructor
 public class ConversationController {
     private final ConversationService conversationService;
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<ConversationResponse>>> findAll(Authentication authentication, @PathVariable Long agentId) {
+        Long userId = CommonFunction.getUserId(authentication);
+        List<ConversationResponse> responses = conversationService.findAllByAgent(userId, agentId);
+        return ResponseEntity.ok(ApiResponse.success(responses));
+    }
 
     @PostMapping
     public ResponseEntity<ApiResponse<ConversationResponse>> create(Authentication authentication, @PathVariable Long agentId, @Valid @RequestBody ConversationCreateRequest request) {

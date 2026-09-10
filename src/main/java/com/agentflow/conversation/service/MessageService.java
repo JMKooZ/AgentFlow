@@ -37,6 +37,15 @@ public class MessageService {
     private final AgentExecutor agentExecutor;
     private final ConversationSummaryService conversationSummaryService;
 
+    public List<MessageResponse> findAllByConversation(Long userId, Long conversationId) {
+        conversationRepository.findByIdAndUserId(conversationId, userId)
+                .orElseThrow(() -> new AgentFlowException(ErrorCode.CONVERSATION_NOT_FOUND));
+
+        return messageRepository.findAllByConversationIdOrderByCreatedAtAsc(conversationId).stream()
+                .map(m -> new MessageResponse(m.getId(), m.getRole(), m.getContent()))
+                .toList();
+    }
+
     @Transactional
     public MessageResponse send(Long userId, Long conversationId, MessageCreateRequest request) {
         Conversation conversation = conversationRepository.findByIdAndUserId(conversationId, userId)

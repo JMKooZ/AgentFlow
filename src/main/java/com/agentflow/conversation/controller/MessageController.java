@@ -11,12 +11,21 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/conversations/{conversationId}/messages")
 @RequiredArgsConstructor
 public class MessageController {
 
     private final MessageService messageService;
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<MessageResponse>>> findAll(Authentication authentication, @PathVariable Long conversationId) {
+        Long userId = CommonFunction.getUserId(authentication);
+        List<MessageResponse> responses = messageService.findAllByConversation(userId, conversationId);
+        return ResponseEntity.ok(ApiResponse.success(responses));
+    }
 
     @PostMapping
     public ResponseEntity<ApiResponse<MessageResponse>> send(Authentication authentication, @PathVariable Long conversationId, @Valid @RequestBody MessageCreateRequest request) {

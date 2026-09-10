@@ -14,6 +14,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class ConversationService {
@@ -21,6 +23,12 @@ public class ConversationService {
     private final ConversationRepository conversationRepository;
     private final AgentRepository agentRepository;
     private final UserRepository userRepository;
+
+    public List<ConversationResponse> findAllByAgent(Long userId, Long agentId) {
+        return conversationRepository.findAllByAgentIdAndUserId(agentId, userId).stream()
+                .map(c -> new ConversationResponse(c.getId(), c.getAgent().getId(), c.getTitle()))
+                .toList();
+    }
 
     @Transactional
     public ConversationResponse create(Long userId, Long agentId, ConversationCreateRequest request) {
