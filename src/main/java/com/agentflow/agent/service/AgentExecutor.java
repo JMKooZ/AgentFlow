@@ -1,11 +1,11 @@
 package com.agentflow.agent.service;
 
 import com.agentflow.agent.entity.Agent;
-import com.agentflow.tool.ToolRegistry;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
 
 import java.util.List;
 
@@ -15,25 +15,50 @@ public class AgentExecutor {
 
     private final ChatClient chatClient;
     private final AgentPromptBuilder agentPromptBuilder;
-    private final ToolRegistry toolRegistry;
 
-    public String execute(Agent agent, String message, Long userId) {
+    public String execute(Agent agent, String message) {
+        return execute(agent, message, new Object[0]);
+    }
+
+    public String execute(Agent agent, String message, Object[] tools) {
         return chatClient
                 .prompt()
                 .system(agentPromptBuilder.build(agent))
                 .user(message)
-                .tools(toolRegistry.resolve(agent.getEnabledTools(), userId))
+                .tools(tools)
                 .call()
                 .content();
     }
 
-    public String execute(Agent agent, List<Message> messages, String summary, Long userId) {
+    public String execute(Agent agent, List<Message> messages) {
+        return execute(agent, messages, null, new Object[0]);
+    }
+
+    public String execute(Agent agent, List<Message> messages, String summary) {
+        return execute(agent, messages, summary, new Object[0]);
+    }
+
+    public String execute(Agent agent, List<Message> messages, String summary, Object[] tools) {
         return chatClient
                 .prompt()
                 .system(agentPromptBuilder.build(agent, summary))
                 .messages(messages)
-                .tools(toolRegistry.resolve(agent.getEnabledTools(), userId))
+                .tools(tools)
                 .call()
+                .content();
+    }
+
+    public Flux<String> stream(Agent agent, List<Message> messages, String summary) {
+        return stream(agent, messages, summary, new Object[0]);
+    }
+
+    public Flux<String> stream(Agent agent, List<Message> messages, String summary, Object[] tools) {
+        return chatClient
+                .prompt()
+                .system(agentPromptBuilder.build(agent, summary))
+                .messages(messages)
+                .tools(tools)
+                .stream()
                 .content();
     }
 }

@@ -8,8 +8,11 @@ import com.agentflow.conversation.service.MessageService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.codec.ServerSentEvent;
+import reactor.core.publisher.Flux;
 
 import java.util.List;
 
@@ -41,5 +44,18 @@ public class MessageController {
         return ResponseEntity.ok(
                 ApiResponse.success(response)
         );
+    }
+
+    @PostMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<ServerSentEvent<String>> stream(
+            Authentication authentication,
+            @PathVariable Long conversationId,
+            @Valid @RequestBody MessageCreateRequest request) {
+
+        Long userId = CommonFunction.getUserId(authentication);
+
+        return messageService.stream(userId, conversationId, request)
+                .map(chunk -> ServerSentEvent.builder(chunk).event("chunk").build())
+                .concatWithValues(ServerSentEvent.<String>builder().event("complete").build());
     }
 }

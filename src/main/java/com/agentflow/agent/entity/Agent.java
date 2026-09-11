@@ -39,9 +39,12 @@ public class Agent {
     private String systemPrompt;
 
     @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "agent_tools", joinColumns = @JoinColumn(name = "agent_id"))
+    @CollectionTable(
+            name = "agent_tools",
+            joinColumns = @JoinColumn(name = "agent_id")
+    )
+    @Column(name = "tool")
     @Enumerated(EnumType.STRING)
-    @Column(name = "tool", length = 30)
     private Set<AgentToolType> enabledTools = new HashSet<>();
 
     @Column(nullable = false)
@@ -55,7 +58,7 @@ public class Agent {
         this.name = name;
         this.description = description;
         this.systemPrompt = systemPrompt;
-        this.enabledTools = enabledTools != null ? enabledTools : new HashSet<>();
+        this.enabledTools = enabledTools != null ? new HashSet<>(enabledTools) : new HashSet<>();
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
@@ -64,7 +67,7 @@ public class Agent {
         this.name = name;
         this.description = description;
         this.systemPrompt = systemPrompt;
-        this.enabledTools = enabledTools != null ? enabledTools : new HashSet<>();
+        this.enabledTools = enabledTools != null ? new HashSet<>(enabledTools) : new HashSet<>();
         this.updatedAt = LocalDateTime.now();
     }
 }
