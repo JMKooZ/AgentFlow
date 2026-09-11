@@ -1,5 +1,7 @@
 package com.agentflow.conversation.service;
 
+import com.agentflow.agent.entity.Agent;
+import com.agentflow.agent.repository.AgentRepository;
 import com.agentflow.agent.service.AgentExecutor;
 import com.agentflow.common.exception.AgentFlowException;
 import com.agentflow.common.exception.ErrorCode;
@@ -42,6 +44,7 @@ public class MessageService {
     private final ConversationSummaryService conversationSummaryService;
     private final ExecutionLogService executionLogService;
     private final DocumentRagService documentRagService;
+    private final AgentRepository agentRepository;
 
     @Transactional
     public MessageResponse send(Long userId, Long conversationId, MessageCreateRequest request) {
@@ -77,18 +80,23 @@ public class MessageService {
         Conversation conversation = conversationRepository.findByIdAndUserId(conversationId, userId)
                 .orElseThrow(() -> new AgentFlowException(ErrorCode.CONVERSATION_NOT_FOUND));
 
+        Agent agent = agentRepository.findByIdWithTools(conversation.getAgent().getId())
+                .orElseThrow(() -> new AgentFlowException(ErrorCode.AGENT_NOT_FOUND));
+
         messageRepository.save(new Message(conversation, MessageRole.USER, request.content()));
+
         Long executionLogId = executionLogService.start(
-                conversation.getUser(), conversation.getAgent(), conversation, request.content());
+                conversation.getUser(), agent, conversation, request.content());
 
         List<org.springframework.ai.chat.messages.Message> chatMessages = buildChatMessages(conversationId, conversation);
         StringBuilder answer = new StringBuilder();
 
         String documentContext = documentRagService.contextFor(userId, request.content());
         String summary = appendDocumentContext(conversation.getSummary(), documentContext);
-        Object[] tools = toolRegistry.resolve(conversation.getAgent().getEnabledTools(), userId);
 
-        return agentExecutor.stream(conversation.getAgent(), chatMessages, summary, tools)
+        Object[] tools = toolRegistry.resolve(agent.getEnabledTools(), userId);
+
+        return agentExecutor.stream(agent, chatMessages, summary, tools)
                 .doOnNext(answer::append)
                 .doOnComplete(() -> saveStreamingAnswer(conversation, executionLogId, answer.toString()))
                 .doOnError(error -> executionLogService.fail(executionLogId, error));
