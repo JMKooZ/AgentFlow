@@ -10,6 +10,9 @@ import com.agentflow.conversation.entity.Message;
 import com.agentflow.conversation.entity.MessageRole;
 import com.agentflow.conversation.repository.ConversationRepository;
 import com.agentflow.conversation.repository.MessageRepository;
+import com.agentflow.execution.service.ExecutionLogService;
+import com.agentflow.document.service.DocumentRagService;
+import com.agentflow.tool.ToolRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.messages.AssistantMessage;
@@ -19,6 +22,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Flux;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -28,14 +32,16 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class MessageService {
-
     private static final int RECENT_MESSAGE_LIMIT = 20;
     private static final int SUMMARY_BATCH_SIZE = 5;
 
+    private final ToolRegistry toolRegistry;
     private final ConversationRepository conversationRepository;
     private final MessageRepository messageRepository;
     private final AgentExecutor agentExecutor;
     private final ConversationSummaryService conversationSummaryService;
+    private final ExecutionLogService executionLogService;
+    private final DocumentRagService documentRagService;
 
     @Transactional
     public MessageResponse send(Long userId, Long conversationId, MessageCreateRequest request) {
@@ -59,11 +65,67 @@ public class MessageService {
                         .map(this::convertMessage)
                         .toList();
 
-        String answer = agentExecutor.execute(conversation.getAgent(), chatMessages, conversation.getSummary());
+        Object[] tools = toolRegistry.resolve(conversation.getAgent().getEnabledTools(), userId);
+        String answer = agentExecutor.execute(conversation.getAgent(), chatMessages, conversation.getSummary(), tools);
 
         Message assistantMessage = new Message(conversation, MessageRole.ASSISTANT, answer);
         Message savedMessage = messageRepository.save(assistantMessage);
         return new MessageResponse(savedMessage.getId(), savedMessage.getRole(), savedMessage.getContent());
+    }
+
+    public Flux<String> stream(Long userId, Long conversationId, MessageCreateRequest request) {
+        Conversation conversation = conversationRepository.findByIdAndUserId(conversationId, userId)
+                .orElseThrow(() -> new AgentFlowException(ErrorCode.CONVERSATION_NOT_FOUND));
+
+        messageRepository.save(new Message(conversation, MessageRole.USER, request.content()));
+        Long executionLogId = executionLogService.start(
+                conversation.getUser(), conversation.getAgent(), conversation, request.content());
+
+        List<org.springframework.ai.chat.messages.Message> chatMessages = buildChatMessages(conversationId, conversation);
+        StringBuilder answer = new StringBuilder();
+
+        String documentContext = documentRagService.contextFor(userId, request.content());
+        String summary = appendDocumentContext(conversation.getSummary(), documentContext);
+        Object[] tools = toolRegistry.resolve(conversation.getAgent().getEnabledTools(), userId);
+
+        return agentExecutor.stream(conversation.getAgent(), chatMessages, summary, tools)
+                .doOnNext(answer::append)
+                .doOnComplete(() -> saveStreamingAnswer(conversation, executionLogId, answer.toString()))
+                .doOnError(error -> executionLogService.fail(executionLogId, error));
+    }
+
+    @Transactional
+    protected void saveStreamingAnswer(Conversation conversation, Long executionLogId, String answer) {
+        messageRepository.save(new Message(conversation, MessageRole.ASSISTANT, answer));
+        executionLogService.succeed(executionLogId, answer);
+    }
+
+    private List<org.springframework.ai.chat.messages.Message> buildChatMessages(Long conversationId, Conversation conversation) {
+        Pageable pageable = PageRequest.of(0, RECENT_MESSAGE_LIMIT, Sort.by(Sort.Direction.DESC, "createdAt"));
+        List<Message> recentMessages = messageRepository.findByConversationId(conversationId, pageable);
+        Collections.reverse(recentMessages);
+
+        List<Message> pendingMessages = resolvePendingMessages(conversation, recentMessages);
+        List<Message> contextMessages = new ArrayList<>(pendingMessages);
+        contextMessages.addAll(recentMessages);
+
+        return contextMessages.stream().map(this::convertMessage).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<MessageResponse> findAllByConversation(Long userId, Long conversationId) {
+        conversationRepository.findByIdAndUserId(conversationId, userId)
+                .orElseThrow(() -> new AgentFlowException(ErrorCode.CONVERSATION_NOT_FOUND));
+
+        return messageRepository.findAllByConversationIdOrderByCreatedAtAsc(conversationId).stream()
+                .map(m -> new MessageResponse(m.getId(), m.getRole(), m.getContent()))
+                .toList();
+    }
+
+    private String appendDocumentContext(String summary, String documentContext) {
+        if (documentContext.isBlank()) return summary;
+        String prefix = (summary == null || summary.isBlank()) ? "" : summary + "\n\n";
+        return prefix + "[참고 문서]\n" + documentContext;
     }
 
     /**

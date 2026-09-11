@@ -6,6 +6,7 @@ import com.agentflow.agent.repository.AgentRepository;
 import com.agentflow.common.exception.AgentFlowException;
 import com.agentflow.common.exception.ErrorCode;
 import com.agentflow.conversation.repository.ConversationRepository;
+import com.agentflow.tool.ToolRegistry;
 import com.agentflow.user.entity.User;
 import com.agentflow.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,13 +24,14 @@ public class AgentService {
     private final UserRepository userRepository;
     private final ConversationRepository conversationRepository;
     private final AgentExecutor agentExecutor;
+    private final ToolRegistry toolRegistry;
 
     @Transactional
     public AgentResponse create(Long userId, AgentCreateRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AgentFlowException(ErrorCode.USER_NOT_FOUND));
 
-        Agent agent = new Agent(user, request.name(), request.description(), request.systemPrompt());
+        Agent agent = new Agent(user, request.name(), request.description(), request.systemPrompt(), request.tools());
 
         agentRepository.save(agent);
         return AgentResponse.from(agent);
@@ -50,7 +52,7 @@ public class AgentService {
     @Transactional
     public AgentResponse update(Long userId, Long agentId, AgentUpdateRequest request) {
         Agent agent = findAgent(agentId, userId);
-        agent.update(request.name(), request.description(), request.systemPrompt());
+        agent.update(request.name(), request.description(), request.systemPrompt(), request.tools());
         return AgentResponse.from(agent);
     }
 
@@ -67,7 +69,8 @@ public class AgentService {
 
     public AgentExecuteResponse execute(Long userId, Long agentId, AgentExecuteRequest request) {
         Agent agent = findAgent(agentId, userId);
-        String answer = agentExecutor.execute(agent, request.message());
+        Object[] tools = toolRegistry.resolve(agent.getEnabledTools(), userId);
+        String answer = agentExecutor.execute(agent, request.message(), tools);
         return new AgentExecuteResponse(answer);
     }
 

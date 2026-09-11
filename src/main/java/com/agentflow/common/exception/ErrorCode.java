@@ -24,7 +24,9 @@ public enum ErrorCode {
 
     AGENT_HAS_CONVERSATIONS(HttpStatus.CONFLICT, "AGENT-002", "연결된 대화가 있어 Agent를 삭제할 수 없습니다."),
 
-    CONVERSATION_NOT_FOUND(HttpStatus.NOT_FOUND, "CONVERSATION-001", "CONVERSATION을 찾을 수 없습니다");
+    CONVERSATION_NOT_FOUND(HttpStatus.NOT_FOUND, "CONVERSATION-001", "CONVERSATION을 찾을 수 없습니다"),
+
+    FILE_NOT_FOUND(HttpStatus.NOT_FOUND, "FILE-001", "파일을 찾을 수 없습니다.");
 
     private final HttpStatus status;
     private final String code;
