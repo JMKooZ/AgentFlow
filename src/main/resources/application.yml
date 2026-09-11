@@ -54,3 +54,7 @@ jwt:
   secret: ${JWT_SECRET}
   access-token-expiration: 3600000
   refresh-token-expiration: 1209600000
+
+tavily:
+  api-key: ${TAVILY_API_KEY:}
+  base-url: https://api.tavily.com

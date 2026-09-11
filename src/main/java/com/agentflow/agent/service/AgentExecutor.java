@@ -17,32 +17,47 @@ public class AgentExecutor {
     private final AgentPromptBuilder agentPromptBuilder;
 
     public String execute(Agent agent, String message) {
+        return execute(agent, message, new Object[0]);
+    }
+
+    public String execute(Agent agent, String message, Object[] tools) {
         return chatClient
                 .prompt()
                 .system(agentPromptBuilder.build(agent))
                 .user(message)
+                .tools(tools)
                 .call()
                 .content();
     }
 
     public String execute(Agent agent, List<Message> messages) {
-        return execute(agent, messages, null);
+        return execute(agent, messages, null, new Object[0]);
     }
 
     public String execute(Agent agent, List<Message> messages, String summary) {
+        return execute(agent, messages, summary, new Object[0]);
+    }
+
+    public String execute(Agent agent, List<Message> messages, String summary, Object[] tools) {
         return chatClient
                 .prompt()
                 .system(agentPromptBuilder.build(agent, summary))
                 .messages(messages)
+                .tools(tools)
                 .call()
                 .content();
     }
 
     public Flux<String> stream(Agent agent, List<Message> messages, String summary) {
+        return stream(agent, messages, summary, new Object[0]);
+    }
+
+    public Flux<String> stream(Agent agent, List<Message> messages, String summary, Object[] tools) {
         return chatClient
                 .prompt()
                 .system(agentPromptBuilder.build(agent, summary))
                 .messages(messages)
+                .tools(tools)
                 .stream()
                 .content();
     }
